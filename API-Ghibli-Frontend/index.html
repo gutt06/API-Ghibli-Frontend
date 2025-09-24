@@ -1,0 +1,115 @@
+<!--Baixar as extensões Live Preview e REST Client-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filmes Ghibli</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    #filmes-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .filme-card {
+      background-color: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .filme-card h2 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+    }
+    .filme-card p {
+      margin: 4px 0;
+    }
+    .filme-card .generos {
+      margin-top: 8px;
+      font-style: italic;
+      color: #555;
+    }
+    .erro {
+      color: red;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Filmes da API Ghibli</h1>
+  <div id="filmes-container">
+    <!-- os cards de filmes vão aparecer aqui -->
+  </div>
+  <p id="mensagem-erro" class="erro"></p>
+
+  <script>
+    const apiUrl = "https://api-ghibli.onrender.com";
+
+    async function carregarFilmes() {
+      const container = document.getElementById("filmes-container");
+      const erroElem = document.getElementById("mensagem-erro");
+      container.innerHTML = "";
+      erroElem.textContent = "";
+
+      try {
+        const resp = await fetch(apiUrl);
+        if (!resp.ok) {
+          throw new Error("Falha ao buscar dados da API: " + resp.status);
+        }
+        const dados = await resp.json();
+        // A URL que você deu é do OpenAPI / swagger JSON, não dos filmes diretamente.
+        // Se quiser buscar filmes, você precisará usar o endpoint /filmes da API, por exemplo:
+        // const filmesResp = await fetch("https://api-ghibli.onrender.com/filmes");
+        // const filmes = await filmesResp.json();
+        //
+        // Aqui vou supor que você quis o JSON da especificação OpenAPI. Então vamos mostrar partes desse JSON.
+
+        mostrarSpecOpenAPI(dados);
+
+      } catch (err) {
+        console.error(err);
+        erroElem.textContent = "Erro: " + err.message;
+      }
+    }
+
+    function mostrarSpecOpenAPI(spec) {
+      const container = document.getElementById("filmes-container");
+      // Exibir alguns elementos da especificação, por exemplo os caminhos existentes:
+      if (!spec.paths) {
+        container.innerHTML = "<p>Não foi encontrado campo <code>paths</code> na resposta.</p>";
+        return;
+      }
+
+      for (const path in spec.paths) {
+        const card = document.createElement("div");
+        card.className = "filme-card";
+        const h2 = document.createElement("h2");
+        h2.textContent = path;
+        card.appendChild(h2);
+
+        const detalhes = spec.paths[path];
+        for (const metodo in detalhes) {
+          const m = detalhes[metodo];
+          const p = document.createElement("p");
+          p.innerHTML = `<strong>${metodo.toUpperCase()}</strong> — ${m.summary || ""}`;
+          card.appendChild(p);
+        }
+
+        container.appendChild(card);
+      }
+    }
+
+    // Chama o carregamento ao abrir a página
+    window.addEventListener("DOMContentLoaded", carregarFilmes);
+  </script>
+</body>
+</html>
